@@ -8,8 +8,20 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+    # title = models.CharField(
+    #     verbose_name = "Название категории",
+    #     max_length = 255,
+    # )
+    # is_active = models.BooleanField(default = False)
+    # created_at = models.DateTimeField(verbose_name='Дата создания', auto_now_add = True)
+    # updated_at = models.DateTimeField(verbose_name='Дата обновления', auto_now = True)
 
 class Post(models.Model):
+    status_choises = (
+        ('ACTIVE','Active'),
+        ('DRAFT','Draft')   
+    )
     title = models.CharField(max_length=255)
     body = models.TextField()
     created_on = models.DateTimeField(auto_now_add=True)

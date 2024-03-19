@@ -1,16 +1,17 @@
 from django.shortcuts import render
 # from django.http import HttpResponse
-
+from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import UserAccount
 from blog.models import Post
-from serializers import PostListSerializers, PostCreateSerializer
+from .serializers import PostListSerializers, PostCreateSerializer, UserSerializer
 from django.contrib.auth.models import User
 from rest_framework import status
 
-from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView
-
+from rest_framework import generics
+from rest_framework import permissions
+from .permissions import IsOwnerOrReadOnly
 # class AccountAPIView(APIView):
     
 #     def get(self, request):
@@ -44,9 +45,10 @@ from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView
 #         return Response("Post deleted", status=status.HTTP_204_NO_CONTENT)
 
 
-class PostAPIView(ListCreateAPIView):
+class PostAPIView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class =  PostCreateSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def create_view(self, serializer):
         user = self.request.user 
@@ -54,11 +56,20 @@ class PostAPIView(ListCreateAPIView):
         post = serializer.save(user=user)
         post.categories.add(*categories)
 
-class PostDetailAPIView(RetrieveDestroyAPIView):
+class PostDetailAPIView(generics.RetrieveDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostListSerializers
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
 
     def delete(self, request):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response("Post deleted", status=status.HTTP_204_NO_CONTENT)
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
